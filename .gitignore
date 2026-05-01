@@ -1,0 +1,16 @@
+# Entornos virtuales
+venv/
+.env
+
+# Datos y Modelos (Se gestionan con DVC, no con Git)
+data/
+models/*.pkl
+models/*.pt
+models/*.onnx
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
