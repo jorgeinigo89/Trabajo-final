@@ -1,0 +1,24 @@
+[project]
+name = "my_ml_project"
+version = "0.1.0"
+description = "Financial ML Project with MLOps structure"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas==2.2.1",
+    "scikit-learn==1.4.1",
+    "streamlit>=1.32.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# Seleccionar reglas (E: Error, F: Pyflakes, I: Isort)
+select = ["E", "F", "I", "W"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
