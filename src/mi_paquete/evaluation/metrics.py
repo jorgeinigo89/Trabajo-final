@@ -7,6 +7,7 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
+    precision_recall_fscore_support,
     roc_auc_score,
     roc_curve,
 )
@@ -22,6 +23,7 @@ def evaluate(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
     fpr, tpr, _ = roc_curve(y_test, y_proba)
+    prec, rec, f1, _ = precision_recall_fscore_support(y_test, y_pred, labels=[0, 1])
 
     return {
         "accuracy": accuracy_score(y_test, y_pred),
@@ -32,6 +34,9 @@ def evaluate(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
         ),
         "fpr": fpr,
         "tpr": tpr,
+        "precision_per_class": prec,
+        "recall_per_class": rec,
+        "f1_per_class": f1,
     }
 
 
@@ -57,6 +62,7 @@ def evaluate_mlp(
 
     preds = (probs >= 0.5).astype(int)
     fpr, tpr, _ = roc_curve(y_true, probs)
+    prec, rec, f1, _ = precision_recall_fscore_support(y_true, preds, labels=[0, 1])
 
     return {
         "accuracy": accuracy_score(y_true, preds),
@@ -67,4 +73,7 @@ def evaluate_mlp(
         ),
         "fpr": fpr,
         "tpr": tpr,
+        "precision_per_class": prec,
+        "recall_per_class": rec,
+        "f1_per_class": f1,
     }

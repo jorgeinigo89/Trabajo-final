@@ -111,7 +111,7 @@ def get_mlp_model(num_epochs):
 # ── Sidebar controls ─────────────────────────────────────────────────────────
 st.sidebar.title("Model settings")
 model_choice = st.sidebar.radio(
-    "Select model",
+    "Select model:",
     ["Random Forest", "Neural Network (MLP)"],
 )
 st.sidebar.markdown("---")
@@ -366,35 +366,69 @@ with tab_model:
             )
             st.plotly_chart(fig_loss, use_container_width=True)
 
-    # ROC curve (full width, below the two columns)
-    st.subheader("ROC curve")
-    _fpr = metrics["fpr"]
-    _tpr = metrics["tpr"]
-    _auc = metrics["roc_auc"]
-    roc_df = pd.DataFrame({"FPR": _fpr, "TPR": _tpr})
-    fig_roc = px.line(
-        roc_df,
-        x="FPR",
-        y="TPR",
-        labels={"FPR": "False positive rate", "TPR": "True positive rate"},
-        color_discrete_sequence=["#636EFA"],
-        title=f"AUC = {_auc:.3f}",
-    )
-    fig_roc.add_shape(
-        type="line",
-        x0=0,
-        y0=0,
-        x1=1,
-        y1=1,
-        line={"dash": "dash", "color": "gray", "width": 1},
-    )
-    fig_roc.update_layout(
-        xaxis_range=[0, 1],
-        yaxis_range=[0, 1.01],
-        width=550,
-        height=430,
-    )
-    st.plotly_chart(fig_roc)
+    # ROC curve + F1 bar chart side by side
+    rc1, rc2 = st.columns(2)
+
+    with rc1:
+        st.subheader("ROC curve")
+        _fpr = metrics["fpr"]
+        _tpr = metrics["tpr"]
+        _auc = metrics["roc_auc"]
+        roc_df = pd.DataFrame({"FPR": _fpr, "TPR": _tpr})
+        fig_roc = px.line(
+            roc_df,
+            x="FPR",
+            y="TPR",
+            labels={"FPR": "False positive rate", "TPR": "True positive rate"},
+            color_discrete_sequence=["#636EFA"],
+            title=f"AUC = {_auc:.3f}",
+        )
+        fig_roc.add_shape(
+            type="line",
+            x0=0,
+            y0=0,
+            x1=1,
+            y1=1,
+            line={"dash": "dash", "color": "gray", "width": 1},
+        )
+        fig_roc.update_layout(xaxis_range=[0, 1], yaxis_range=[0, 1.01])
+        st.plotly_chart(fig_roc, use_container_width=True)
+
+    with rc2:
+        st.subheader("Precision / Recall / F1 by class")
+        f1_df = pd.DataFrame(
+            {
+                "Class": ["no", "yes", "no", "yes", "no", "yes"],
+                "Metric": [
+                    "Precision",
+                    "Precision",
+                    "Recall",
+                    "Recall",
+                    "F1-score",
+                    "F1-score",
+                ],
+                "Score": [
+                    metrics["precision_per_class"][0],
+                    metrics["precision_per_class"][1],
+                    metrics["recall_per_class"][0],
+                    metrics["recall_per_class"][1],
+                    metrics["f1_per_class"][0],
+                    metrics["f1_per_class"][1],
+                ],
+            }
+        )
+        fig_f1 = px.bar(
+            f1_df,
+            x="Metric",
+            y="Score",
+            color="Class",
+            barmode="group",
+            color_discrete_map={"no": "#636EFA", "yes": "#EF553B"},
+            text_auto=".3f",
+            range_y=[0, 1.05],
+        )
+        fig_f1.update_traces(textposition="outside")
+        st.plotly_chart(fig_f1, use_container_width=True)
 
     st.subheader("Classification report")
     st.code(metrics["classification_report"], language="text")
