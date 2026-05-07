@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "fastparquet>=2026.3.0",
+    "graphviz>=0.21",
     "ipykernel>=7.2.0",
     "matplotlib>=3.10.9",
     "numpy>=2.2.6",
@@ -19,5 +20,29 @@ dependencies = [
     "streamlit>=1.57.0",
     "torch==2.2.2",
     "torchaudio==2.2.2",
+    "torchinfo>=1.8.0",
+    "torchview>=0.2.7",
     "torchvision==0.17.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (orden de imports)
+    "B",   # flake8-bugbear (errores lógicos)
+    "T20", # flake8-print (prohíbe prints en src/)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["T201"] # Permite prints solo en notebooks

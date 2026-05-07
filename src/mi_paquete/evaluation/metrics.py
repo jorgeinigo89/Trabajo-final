@@ -23,5 +23,7 @@ def evaluate(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
         "accuracy": accuracy_score(y_test, y_pred),
         "roc_auc": roc_auc_score(y_test, y_proba),
         "confusion_matrix": confusion_matrix(y_test, y_pred),
-        "classification_report": classification_report(y_test, y_pred, target_names=["no", "yes"]),
+        "classification_report": classification_report(
+            y_test, y_pred, target_names=["no", "yes"]
+        ),
     }

@@ -1,8 +1,8 @@
 """Training utilities for the Bank Marketing classification task."""
 
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-import pandas as pd
 
 
 def split_data(
@@ -12,7 +12,9 @@ def split_data(
     random_state: int = 42,
 ) -> tuple:
     """Return (X_train, X_test, y_train, y_test)."""
-    return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
+    return train_test_split(
+        X, y, test_size=test_size, random_state=random_state, stratify=y
+    )
 
 
 def train_random_forest(
@@ -32,10 +34,14 @@ def train_random_forest(
     return model
 
 
-def feature_importances(model: RandomForestClassifier, feature_names: list) -> pd.DataFrame:
+def feature_importances(
+    model: RandomForestClassifier, feature_names: list
+) -> pd.DataFrame:
     """Return a sorted DataFrame of feature importances."""
     return (
-        pd.DataFrame({"feature": feature_names, "importance": model.feature_importances_})
+        pd.DataFrame(
+            {"feature": feature_names, "importance": model.feature_importances_}
+        )
         .sort_values("importance", ascending=False)
         .reset_index(drop=True)
     )

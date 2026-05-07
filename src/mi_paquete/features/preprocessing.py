@@ -3,9 +3,17 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-
-CATEGORICAL_COLS = ["job", "marital", "education", "default", "housing", "loan",
-                    "contact", "month", "poutcome"]
+CATEGORICAL_COLS = [
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan",
+    "contact",
+    "month",
+    "poutcome",
+]
 TARGET_COL = "y"
 
 
@@ -25,7 +33,9 @@ def encode_features(df: pd.DataFrame) -> tuple[pd.DataFrame, LabelEncoder]:
             df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
 
     target_encoder = LabelEncoder()
-    df_encoded[TARGET_COL] = target_encoder.fit_transform(df_encoded[TARGET_COL].astype(str))
+    df_encoded[TARGET_COL] = target_encoder.fit_transform(
+        df_encoded[TARGET_COL].astype(str)
+    )
 
     return df_encoded, target_encoder
 

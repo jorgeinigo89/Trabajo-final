@@ -9,17 +9,21 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.figure_factory as ff
+import base64  # noqa: E402
 
-import base64
+import pandas as pd  # noqa: E402
+import plotly.express as px  # noqa: E402
+import plotly.figure_factory as ff  # noqa: E402
+import streamlit as st  # noqa: E402
 
-from mi_paquete.data.loader import load_bank_data, basic_info
-from mi_paquete.features.preprocessing import encode_features, get_X_y
-from mi_paquete.models.train import split_data, train_random_forest, feature_importances
-from mi_paquete.evaluation.metrics import evaluate
+from mi_paquete.data.loader import basic_info, load_bank_data  # noqa: E402
+from mi_paquete.evaluation.metrics import evaluate  # noqa: E402
+from mi_paquete.features.preprocessing import encode_features, get_X_y  # noqa: E402
+from mi_paquete.models.train import (  # noqa: E402
+    feature_importances,
+    split_data,
+    train_random_forest,
+)
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -56,11 +60,16 @@ if _font_path.exists():
 # ── Developer info ────────────────────────────────────────────────────────────
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Developer:** Jorge Inigo")
-st.sidebar.markdown("[![GitHub](https://img.shields.io/badge/GitHub-jorgeinigo89-181717?logo=github)](https://github.com/jorgeinigo89)")
+st.sidebar.markdown(
+    "[![GitHub](https://img.shields.io/badge/GitHub-jorgeinigo89-181717?logo=github)](https://github.com/jorgeinigo89)"
+)
 st.sidebar.markdown("**Lecturer:** Noe Hernandez (ITAM)")
-st.sidebar.markdown("Module I — Professional Certificate in AI & LLMs in Financial Markets (ITAM)")
+st.sidebar.markdown(
+    "Module I — Professional Certificate in AI & LLMs in Financial Markets (ITAM)"
+)
 st.sidebar.markdown("**Version:** 1.0.0")
 st.sidebar.markdown("**Date:** 2026-05-06")
+
 
 # ── Load & cache data / model ─────────────────────────────────────────────────
 @st.cache_data
@@ -74,7 +83,9 @@ def get_model(n_estimators, max_depth):
     df_enc, _ = encode_features(df)
     X, y = get_X_y(df_enc)
     X_train, X_test, y_train, y_test = split_data(X, y)
-    model = train_random_forest(X_train, y_train, n_estimators=n_estimators, max_depth=max_depth)
+    model = train_random_forest(
+        X_train, y_train, n_estimators=n_estimators, max_depth=max_depth
+    )
     metrics = evaluate(model, X_test, y_test)
     fi = feature_importances(model, list(X.columns))
     return model, metrics, fi, X_test, y_test
@@ -86,7 +97,9 @@ n_estimators = st.sidebar.slider("n_estimators", 50, 300, 100, step=50)
 max_depth = st.sidebar.slider("max_depth", 3, 20, 10)
 
 st.sidebar.markdown("---")
-st.sidebar.info("Data: UCI Bank Marketing dataset  \nTarget: `y` (term deposit subscription)")
+st.sidebar.info(
+    "Data: UCI Bank Marketing dataset  \nTarget: `y` (term deposit subscription)"
+)
 
 # ── Load everything ───────────────────────────────────────────────────────────
 df = get_data()
@@ -97,17 +110,19 @@ info = basic_info(df)
 st.title("Bank Marketing — ML Dashboard")
 st.markdown(
     """
-    This dashboard analyses the **UCI Bank Marketing dataset**, which records the outcomes of
-    direct phone-call marketing campaigns run by a Portuguese bank between **May 2008 and
-    November 2010**.  
-    The goal is to predict whether a client will subscribe to a **term deposit** (`y = yes/no`).
+    This dashboard analyses the **UCI Bank Marketing dataset**, which records
+    the outcomes of direct phone-call marketing campaigns run by a Portuguese
+    bank between **May 2008 and November 2010**.
+    The goal is to predict whether a client will subscribe to a
+    **term deposit** (`y = yes/no`).
 
     **Dataset highlights**
     - **Source:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Bank+Marketing)
     - **Campaigns:** outbound calls; some clients were contacted more than once
     - **Features:** client demographics (age, job, marital, education), financial status
-      (default, balance, housing loan, personal loan), contact details (type, day, month,
-      duration), campaign statistics (contacts, days since last contact, previous outcome)
+      (default, balance, housing loan, personal loan), contact details
+      (type, day, month, duration), campaign statistics
+      (contacts, days since last contact, previous outcome)
     - **Target:** `y` — did the client subscribe to a term deposit?
     - **Class imbalance:** ~88 % "no" vs ~12 % "yes"
 
@@ -115,14 +130,16 @@ st.markdown(
     Use the sidebar sliders to tune `n_estimators` and `max_depth` interactively.
 
     ---
-    > **Citation:** Moro, S., Rita, P., & Cortez, P. (2014). *Bank Marketing* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
+    > **Citation:** Moro, S., Rita, P., & Cortez, P. (2014). *Bank Marketing*
+    > [Dataset]. UCI Machine Learning Repository.
+    > <https://doi.org/10.24432/C5K306>
     """
 )
 
 # ── KPI row ───────────────────────────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Rows", f"{info['shape'][0]:,}")
-col2.metric("Features", info['shape'][1] - 1)
+col2.metric("Features", info["shape"][1] - 1)
 col3.metric("Accuracy", f"{metrics['accuracy']:.2%}")
 col4.metric("ROC-AUC", f"{metrics['roc_auc']:.3f}")
 
@@ -163,15 +180,24 @@ with tab_eda:
         st.subheader("Target distribution")
         target_counts = df["y"].value_counts().reset_index()
         target_counts.columns = ["y", "count"]
-        fig_pie = px.pie(target_counts, names="y", values="count",
-                         color_discrete_sequence=["#636EFA", "#EF553B"])
+        fig_pie = px.pie(
+            target_counts,
+            names="y",
+            values="count",
+            color_discrete_sequence=["#636EFA", "#EF553B"],
+        )
         st.plotly_chart(fig_pie, use_container_width=True)
 
     with c2:
         st.subheader("Age distribution by outcome")
-        fig_age = px.histogram(df, x="age", color="y", barmode="overlay",
-                               color_discrete_sequence=["#636EFA", "#EF553B"],
-                               nbins=40)
+        fig_age = px.histogram(
+            df,
+            x="age",
+            color="y",
+            barmode="overlay",
+            color_discrete_sequence=["#636EFA", "#EF553B"],
+            nbins=40,
+        )
         st.plotly_chart(fig_age, use_container_width=True)
 
     st.subheader("Subscription rate by job")
@@ -182,16 +208,26 @@ with tab_eda:
         .rename(columns={"y": "subscription_rate"})
         .sort_values("subscription_rate", ascending=False)
     )
-    fig_job = px.bar(job_rate, x="job", y="subscription_rate",
-                     color="subscription_rate", color_continuous_scale="Blues",
-                     labels={"subscription_rate": "Subscription rate"})
+    fig_job = px.bar(
+        job_rate,
+        x="job",
+        y="subscription_rate",
+        color="subscription_rate",
+        color_continuous_scale="Blues",
+        labels={"subscription_rate": "Subscription rate"},
+    )
     st.plotly_chart(fig_job, use_container_width=True)
 
     st.subheader("Call duration vs. subscription")
-    fig_dur = px.box(df, x="y", y="duration", color="y",
-                     color_discrete_sequence=["#636EFA", "#EF553B"],
-                     labels={"duration": "Call duration (s)", "y": "Subscribed"},
-                     points="outliers")
+    fig_dur = px.box(
+        df,
+        x="y",
+        y="duration",
+        color="y",
+        color_discrete_sequence=["#636EFA", "#EF553B"],
+        labels={"duration": "Call duration (s)", "y": "Subscribed"},
+        points="outliers",
+    )
     st.plotly_chart(fig_dur, use_container_width=True)
 
     c3, c4 = st.columns(2)
@@ -204,9 +240,14 @@ with tab_eda:
             .rename(columns={"y": "rate"})
             .sort_values("rate", ascending=False)
         )
-        fig_edu = px.bar(edu_rate, x="education", y="rate",
-                         color="rate", color_continuous_scale="Purples",
-                         labels={"rate": "Subscription rate"})
+        fig_edu = px.bar(
+            edu_rate,
+            x="education",
+            y="rate",
+            color="rate",
+            color_continuous_scale="Purples",
+            labels={"rate": "Subscription rate"},
+        )
         st.plotly_chart(fig_edu, use_container_width=True)
 
     with c4:
@@ -217,16 +258,22 @@ with tab_eda:
             .reset_index()
             .rename(columns={"y": "rate"})
         )
-        fig_mar = px.bar(mar_rate, x="marital", y="rate",
-                         color="rate", color_continuous_scale="Oranges",
-                         labels={"rate": "Subscription rate"})
+        fig_mar = px.bar(
+            mar_rate,
+            x="marital",
+            y="rate",
+            color="rate",
+            color_continuous_scale="Oranges",
+            labels={"rate": "Subscription rate"},
+        )
         st.plotly_chart(fig_mar, use_container_width=True)
 
     st.subheader("Numeric feature correlations")
     num_cols = df.select_dtypes(include="number").columns.tolist()
     corr = df[num_cols].corr()
-    fig_corr = px.imshow(corr, text_auto=".2f", color_continuous_scale="RdBu_r",
-                         aspect="auto")
+    fig_corr = px.imshow(
+        corr, text_auto=".2f", color_continuous_scale="RdBu_r", aspect="auto"
+    )
     st.plotly_chart(fig_corr, use_container_width=True)
 
 # ─── Model tab ────────────────────────────────────────────────────────────────
@@ -247,9 +294,14 @@ with tab_model:
 
     with c2:
         st.subheader("Top 10 feature importances")
-        fig_fi = px.bar(fi_df.head(10), x="importance", y="feature",
-                        orientation="h", color="importance",
-                        color_continuous_scale="Teal")
+        fig_fi = px.bar(
+            fi_df.head(10),
+            x="importance",
+            y="feature",
+            orientation="h",
+            color="importance",
+            color_continuous_scale="Teal",
+        )
         fig_fi.update_layout(yaxis={"categoryorder": "total ascending"})
         st.plotly_chart(fig_fi, use_container_width=True)
 
@@ -260,10 +312,14 @@ with tab_model:
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
     predictions_df = X_test.copy().reset_index(drop=True)
-    predictions_df.insert(0, "real", pd.Series(y_test.values, name="real").map({0: "no", 1: "yes"}))
+    predictions_df.insert(
+        0, "real", pd.Series(y_test.values, name="real").map({0: "no", 1: "yes"})
+    )
     predictions_df.insert(1, "predicted", pd.Series(y_pred).map({0: "no", 1: "yes"}))
     predictions_df.insert(2, "prob_yes", y_proba.round(3))
-    predictions_df.insert(3, "correct", predictions_df["real"] == predictions_df["predicted"])
+    predictions_df.insert(
+        3, "correct", predictions_df["real"] == predictions_df["predicted"]
+    )
 
     filter_opt = st.radio(
         "Show", ["All", "Correct only", "Incorrect only"], horizontal=True
@@ -275,8 +331,9 @@ with tab_model:
 
     st.dataframe(
         predictions_df.style.map(
-            lambda v: "background-color: #d4edda" if v is True else
-                      ("background-color: #f8d7da" if v is False else ""),
+            lambda v: "background-color: #d4edda"
+            if v is True
+            else ("background-color: #f8d7da" if v is False else ""),
             subset=["correct"],
         ),
         use_container_width=True,
@@ -288,7 +345,7 @@ with tab_model:
 with tab_data:
     st.markdown(
         """
-        Full dataset as loaded from `bank-full.csv`.  
+        Full dataset as loaded from `bank-full.csv`.
         Use the column headers to sort, and the search box to filter rows.
         """
     )
@@ -303,7 +360,9 @@ with tab_data:
         st.success("No missing values found in the dataset.")
     else:
         st.warning("Missing values detected:")
-        st.dataframe(missing[missing > 0].rename("missing_count"), use_container_width=True)
+        st.dataframe(
+            missing[missing > 0].rename("missing_count"), use_container_width=True
+        )
 
     st.subheader("Dataset preview")
     st.dataframe(df, use_container_width=True, height=400)
