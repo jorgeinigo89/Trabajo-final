@@ -10,6 +10,12 @@ dependency resolution and **DVC** for data versioning.
 
 ---
 
+## Dashboard Preview
+
+![Dashboard screenshot](screenshot_dashboard.png)
+
+---
+
 ## Dataset
 
 **Source:** [UCI ML Repository — Bank Marketing Dataset](https://archive.ics.uci.edu/dataset/222/bank+marketing)
