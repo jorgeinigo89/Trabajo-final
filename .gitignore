@@ -3,7 +3,7 @@ venv/
 .env
 
 # Datos y Modelos (Se gestionan con DVC, no con Git)
-data/
+
 models/*.pkl
 models/*.pt
 models/*.onnx
@@ -14,3 +14,4 @@ __pycache__/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
+.DS_Store

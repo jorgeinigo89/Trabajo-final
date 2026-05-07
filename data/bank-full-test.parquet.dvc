@@ -1,0 +1,5 @@
+outs:
+- md5: ffff5372924fed4b29629f260a0b0230
+  size: 55603
+  hash: md5
+  path: bank-full-test.parquet

@@ -1,0 +1,5 @@
+outs:
+- md5: 050b0b78ff35a5f4bba0c1bf83fbfa79
+  size: 361514
+  hash: md5
+  path: bank-full-train.parquet
