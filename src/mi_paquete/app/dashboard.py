@@ -66,7 +66,7 @@ st.sidebar.markdown("**Developer:** Jorge Inigo")
 st.sidebar.markdown(
     "[![GitHub](https://img.shields.io/badge/GitHub-jorgeinigo89-181717?logo=github)](https://github.com/jorgeinigo89)"
 )
-st.sidebar.markdown("**Lecturer:** Noe Hernandez (ITAM)")
+st.sidebar.markdown("**Lecturer:** Noe Rodriguez (ITAM)")
 st.sidebar.markdown(
     "Module I — Professional Certificate in AI & LLMs in Financial Markets (ITAM)"
 )
