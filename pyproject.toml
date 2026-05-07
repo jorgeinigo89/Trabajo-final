@@ -1,24 +1,23 @@
 [project]
-name = "my_ml_project"
+name = "trabajo-final"
 version = "0.1.0"
-description = "Financial ML Project with MLOps structure"
-readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
-    "pandas==2.2.1",
-    "scikit-learn==1.4.1",
-    "streamlit>=1.32.0",
+    "fastparquet>=2026.3.0",
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.9",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "pandera>=0.31.1",
+    "plotly>=6.7.0",
+    "pre-commit>=4.6.0",
+    "pyarrow>=24.0.0",
+    "python-dotenv>=1.2.2",
+    "ruff>=0.15.12",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+    "streamlit>=1.57.0",
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "torchvision==0.17.2",
 ]
-
-[tool.ruff]
-line-length = 88
-target-version = "py311"
-
-[tool.ruff.lint]
-# Seleccionar reglas (E: Error, F: Pyflakes, I: Isort)
-select = ["E", "F", "I", "W"]
-ignore = []
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
