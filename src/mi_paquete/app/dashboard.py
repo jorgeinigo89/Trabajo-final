@@ -11,17 +11,20 @@ if str(SRC) not in sys.path:
 
 import base64  # noqa: E402
 
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import plotly.express as px  # noqa: E402
 import plotly.figure_factory as ff  # noqa: E402
 import streamlit as st  # noqa: E402
+import torch  # noqa: E402
 
 from mi_paquete.data.loader import basic_info, load_bank_data  # noqa: E402
-from mi_paquete.evaluation.metrics import evaluate  # noqa: E402
+from mi_paquete.evaluation.metrics import evaluate, evaluate_mlp  # noqa: E402
 from mi_paquete.features.preprocessing import encode_features, get_X_y  # noqa: E402
 from mi_paquete.models.train import (  # noqa: E402
     feature_importances,
     split_data,
+    train_mlp,
     train_random_forest,
 )
 
@@ -68,7 +71,7 @@ st.sidebar.markdown(
     "Module I — Professional Certificate in AI & LLMs in Financial Markets (ITAM)"
 )
 st.sidebar.markdown("**Version:** 1.0.0")
-st.sidebar.markdown("**Date:** 2026-05-06")
+st.sidebar.markdown("**Date:** May 2026")
 
 
 # ── Load & cache data / model ─────────────────────────────────────────────────
@@ -78,7 +81,7 @@ def get_data():
 
 
 @st.cache_resource
-def get_model(n_estimators, max_depth):
+def get_rf_model(n_estimators, max_depth):
     df = get_data()
     df_enc, _ = encode_features(df)
     X, y = get_X_y(df_enc)
@@ -91,20 +94,57 @@ def get_model(n_estimators, max_depth):
     return model, metrics, fi, X_test, y_test
 
 
+@st.cache_resource
+def get_mlp_model(num_epochs):
+    df = get_data()
+    df_enc, _ = encode_features(df)
+    X, y = get_X_y(df_enc)
+    X_train_full, X_test, y_train_full, y_test = split_data(X, y)
+    X_tr, X_val, y_tr, y_val = split_data(X_train_full, y_train_full, test_size=0.2)
+    mlp, scaler, train_losses, val_losses = train_mlp(
+        X_tr, y_tr, X_val, y_val, num_epochs=num_epochs
+    )
+    metrics = evaluate_mlp(mlp, scaler, X_test, y_test)
+    return mlp, scaler, metrics, X_test, y_test, train_losses, val_losses
+
+
 # ── Sidebar controls ─────────────────────────────────────────────────────────
 st.sidebar.title("Model settings")
-n_estimators = st.sidebar.slider("n_estimators", 50, 300, 100, step=50)
-max_depth = st.sidebar.slider("max_depth", 3, 20, 10)
+model_choice = st.sidebar.radio(
+    "Select model",
+    ["Random Forest", "Neural Network (MLP)"],
+)
+st.sidebar.markdown("---")
+
+if model_choice == "Random Forest":
+    st.sidebar.subheader("Random Forest hyperparameters")
+    n_estimators = st.sidebar.slider("n_estimators", 50, 300, 100, step=50)
+    max_depth = st.sidebar.slider("max_depth", 3, 20, 10)
+else:
+    st.sidebar.subheader("MLP hyperparameters")
+    num_epochs = st.sidebar.slider("Training epochs", 10, 100, 30, step=10)
 
 st.sidebar.markdown("---")
 st.sidebar.info(
     "Data: UCI Bank Marketing dataset  \nTarget: `y` (term deposit subscription)"
 )
+if st.sidebar.button("Clear cache & reload"):
+    st.cache_resource.clear()
+    st.cache_data.clear()
+    st.rerun()
 
 # ── Load everything ───────────────────────────────────────────────────────────
 df = get_data()
-model, metrics, fi_df, X_test, y_test = get_model(n_estimators, max_depth)
 info = basic_info(df)
+
+if model_choice == "Random Forest":
+    model, metrics, fi_df, X_test, y_test = get_rf_model(n_estimators, max_depth)
+    scaler = None
+    train_losses, val_losses = None, None
+else:
+    result = get_mlp_model(num_epochs)
+    model, scaler, metrics, X_test, y_test, train_losses, val_losses = result
+    fi_df = None
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("Bank Marketing — ML Dashboard")
@@ -127,7 +167,8 @@ st.markdown(
     - **Class imbalance:** ~88 % "no" vs ~12 % "yes"
 
     The **Random Forest** model below is trained on 80 % of the data.
-    Use the sidebar sliders to tune `n_estimators` and `max_depth` interactively.
+    Use the sidebar to choose between a **Random Forest** and a
+    **Neural Network (MLP)** model, then tune hyperparameters interactively.
 
     ---
     > **Citation:** Moro, S., Rita, P., & Cortez, P. (2014). *Bank Marketing*
@@ -278,6 +319,8 @@ with tab_eda:
 
 # ─── Model tab ────────────────────────────────────────────────────────────────
 with tab_model:
+    st.caption(f"Active model: **{model_choice}**")
+
     c1, c2 = st.columns(2)
 
     with c1:
@@ -293,24 +336,80 @@ with tab_model:
         st.plotly_chart(fig_cm, use_container_width=True)
 
     with c2:
-        st.subheader("Top 10 feature importances")
-        fig_fi = px.bar(
-            fi_df.head(10),
-            x="importance",
-            y="feature",
-            orientation="h",
-            color="importance",
-            color_continuous_scale="Teal",
-        )
-        fig_fi.update_layout(yaxis={"categoryorder": "total ascending"})
-        st.plotly_chart(fig_fi, use_container_width=True)
+        if model_choice == "Random Forest":
+            st.subheader("Top 10 feature importances")
+            fig_fi = px.bar(
+                fi_df.head(10),
+                x="importance",
+                y="feature",
+                orientation="h",
+                color="importance",
+                color_continuous_scale="Teal",
+            )
+            fig_fi.update_layout(yaxis={"categoryorder": "total ascending"})
+            st.plotly_chart(fig_fi, use_container_width=True)
+        else:
+            st.subheader("Training & validation loss")
+            loss_df = pd.DataFrame(
+                {
+                    "epoch": range(1, len(train_losses) + 1),
+                    "Train loss": train_losses,
+                    "Val loss": val_losses,
+                }
+            )
+            fig_loss = px.line(
+                loss_df,
+                x="epoch",
+                y=["Train loss", "Val loss"],
+                labels={"value": "BCE loss", "variable": "Split"},
+                color_discrete_sequence=["#636EFA", "#EF553B"],
+            )
+            st.plotly_chart(fig_loss, use_container_width=True)
+
+    # ROC curve (full width, below the two columns)
+    st.subheader("ROC curve")
+    _fpr = metrics["fpr"]
+    _tpr = metrics["tpr"]
+    _auc = metrics["roc_auc"]
+    roc_df = pd.DataFrame({"FPR": _fpr, "TPR": _tpr})
+    fig_roc = px.line(
+        roc_df,
+        x="FPR",
+        y="TPR",
+        labels={"FPR": "False positive rate", "TPR": "True positive rate"},
+        color_discrete_sequence=["#636EFA"],
+        title=f"AUC = {_auc:.3f}",
+    )
+    fig_roc.add_shape(
+        type="line",
+        x0=0,
+        y0=0,
+        x1=1,
+        y1=1,
+        line={"dash": "dash", "color": "gray", "width": 1},
+    )
+    fig_roc.update_layout(
+        xaxis_range=[0, 1],
+        yaxis_range=[0, 1.01],
+        width=550,
+        height=430,
+    )
+    st.plotly_chart(fig_roc)
 
     st.subheader("Classification report")
     st.code(metrics["classification_report"], language="text")
 
     st.subheader("Test set predictions vs. real values")
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
+    if model_choice == "Random Forest":
+        y_pred = model.predict(X_test)
+        y_proba = model.predict_proba(X_test)[:, 1]
+    else:
+        with torch.no_grad():
+            X_t = torch.tensor(scaler.transform(X_test).tolist(), dtype=torch.float32)
+            probs_tensor = torch.sigmoid(model(X_t).squeeze())
+            y_proba = np.array([x.item() for x in probs_tensor])
+        y_pred = (y_proba >= 0.5).astype(int)
+
     predictions_df = X_test.copy().reset_index(drop=True)
     predictions_df.insert(
         0, "real", pd.Series(y_test.values, name="real").map({0: "no", 1: "yes"})
@@ -331,9 +430,11 @@ with tab_model:
 
     st.dataframe(
         predictions_df.style.map(
-            lambda v: "background-color: #d4edda"
-            if v is True
-            else ("background-color: #f8d7da" if v is False else ""),
+            lambda v: (
+                "background-color: #d4edda"
+                if v is True
+                else ("background-color: #f8d7da" if v is False else "")
+            ),
             subset=["correct"],
         ),
         use_container_width=True,
