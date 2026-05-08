@@ -6,7 +6,7 @@ phone-call marketing campaigns. Implements two classifiers (**Random Forest** an
 dependency resolution and **DVC** for data versioning.
 
 > **Course:** Module I — Professional Certificate in AI & LLMs in Financial Markets
-> **Institution:** ITAM · **Lecturer:** Noe Hernandez · **Author:** Jorge Inigo
+> **Institution:** ITAM · **Lecturer:** Noe Rodriguez · **Author:** Jorge Inigo
 
 ---
 
