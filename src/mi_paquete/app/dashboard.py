@@ -18,6 +18,7 @@ import plotly.figure_factory as ff  # noqa: E402
 import streamlit as st  # noqa: E402
 import torch  # noqa: E402
 
+from mi_paquete.config.settings import load_hyperparams  # noqa: E402
 from mi_paquete.data.loader import basic_info, load_bank_data  # noqa: E402
 from mi_paquete.evaluation.metrics import evaluate, evaluate_mlp  # noqa: E402
 from mi_paquete.features.preprocessing import encode_features, get_X_y  # noqa: E402
@@ -27,6 +28,11 @@ from mi_paquete.models.train import (  # noqa: E402
     train_mlp,
     train_random_forest,
 )
+
+# ── Load hyperparameters from YAML ────────────────────────────────────────────
+_hp = load_hyperparams()
+_rf_hp = _hp["random_forest"]
+_mlp_hp = _hp["mlp"]
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -118,11 +124,15 @@ st.sidebar.markdown("---")
 
 if model_choice == "Random Forest":
     st.sidebar.subheader("Random Forest hyperparameters")
-    n_estimators = st.sidebar.slider("n_estimators", 50, 300, 100, step=50)
-    max_depth = st.sidebar.slider("max_depth", 3, 20, 10)
+    n_estimators = st.sidebar.slider(
+        "n_estimators", 50, 300, _rf_hp["n_estimators"], step=50
+    )
+    max_depth = st.sidebar.slider("max_depth", 3, 20, _rf_hp["max_depth"])
 else:
     st.sidebar.subheader("MLP hyperparameters")
-    num_epochs = st.sidebar.slider("Training epochs", 10, 100, 30, step=10)
+    num_epochs = st.sidebar.slider(
+        "Training epochs", 10, 100, _mlp_hp["num_epochs"], step=10
+    )
 
 st.sidebar.markdown("---")
 st.sidebar.info(
@@ -326,13 +336,22 @@ with tab_model:
     with c1:
         st.subheader("Confusion matrix")
         cm = metrics["confusion_matrix"]
+        tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+        labels = [
+            [f"TN<br>{tn}", f"FP<br>{fp}"],
+            [f"FN<br>{fn}", f"TP<br>{tp}"],
+        ]
         fig_cm = ff.create_annotated_heatmap(
             z=cm.tolist(),
             x=["Pred: no", "Pred: yes"],
             y=["True: no", "True: yes"],
+            annotation_text=labels,
             colorscale="Blues",
         )
         fig_cm.update_layout(xaxis_title="Predicted", yaxis_title="Actual")
+        # Make annotation text larger and bold
+        for ann in fig_cm.layout.annotations:
+            ann.font.size = 14
         st.plotly_chart(fig_cm, use_container_width=True)
 
     with c2:

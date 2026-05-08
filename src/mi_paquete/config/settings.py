@@ -1,23 +1,13 @@
-import os
+from pathlib import Path
 
-from dotenv import load_dotenv
-from my_package.utils.logger import get_logger
+import yaml
 
-# Initialize logger
-logger = get_logger(__name__)
+# Project root is three levels up from this file: config/ -> mi_paquete/ -> src/ -> root
+_ROOT = Path(__file__).resolve().parents[3]
+_HYPERPARAMS_PATH = _ROOT / "configs" / "hyperparameters.yaml"
 
 
-class Settings:
-    """Class to manage environment variables and project configurations."""
-
-    def __init__(self):
-        logger.info("Loading environment variables...")
-        load_dotenv()  # This looks for the .env file
-
-        self.database_url = os.getenv("DATABASE_URL")
-        self.api_key = os.getenv("FINANCIAL_API_KEY")
-
-        if not self.database_url:
-            logger.warning("DATABASE_URL not found. Check your .env file.")
-        else:
-            logger.info("Settings loaded successfully.")
+def load_hyperparams(path: Path = _HYPERPARAMS_PATH) -> dict:
+    """Load hyperparameters from the YAML config file."""
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
